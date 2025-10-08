@@ -1,4 +1,6 @@
 
+GitHub手順
+
 公式サイトアクセス
 https://github.com
 ↓
@@ -6,5 +8,25 @@ https://github.com
 ↓
 リポジトリ作成
 ↓
-Quick setup — if you’ve done this kind of thing before >  creating a new file 
+Quick setup — if you’ve done this kind of thing before
+> creating a new file 
+> choose your files
+> Commit changes
 
+--
+GitHub Pages
+
+リポジトリ選択
+>Settingsタブ
+>左からPages選択
+>Build and deployment
+>Source：Deploy from a branch 
+>Branch：main
+>Folder：/ (root) 
+>Save
+
+公開URL
+https://ユーザー名.github.io/リポジトリ名/index.html
+
+--
+以上
