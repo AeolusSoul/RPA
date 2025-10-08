@@ -1,0 +1,10 @@
+
+公式サイトアクセス
+https://github.com
+↓
+アカウント作成
+↓
+リポジトリ作成
+↓
+Quick setup — if you’ve done this kind of thing before >  creating a new file 
+
