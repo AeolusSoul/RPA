@@ -1,44 +1,72 @@
 <!DOCTYPE html>
 <html lang="ja">
-
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="description" content="WebScrapingを掲載しているページです。">
-  <title>Creations | Web Scraping</title>
-  <!-- PyScript -->
-<link rel="stylesheet" href="https://pyscript.net/latest/pyscript.css" />
-<script defer src="https://pyscript.net/latest/pyscript.js"></script>
+    <meta charset="UTF-8">
+    <title>国立国会図書館 新着情報集計</title>
+    <link rel="stylesheet" href="https://pyscript.net/latest/pyscript.css" />
+    <script defer src="https://pyscript.net/latest/pyscript.js"></script>
+    <py-env>
+        - beautifulsoup4
+        - matplotlib
+    </py-env>
+    <style>
+        body { font-family: sans-serif; padding: 2em; }
+        #output ul { padding-left: 1em; }
+        canvas { max-width: 100%; }
+    </style>
 </head>
-
 <body>
- 
-<!-- PyScript -->
- <h2 class="mb-4">📁 HTMLファイルをアップロード</h2>
-<input type="file" id="htmlFile" />
-<div id="output" class="mt-4"></div>
-<py-script>
-from js import document
-from pyodide.ffi import create_proxy
+    <h1>📚 国立国会図書館 新着情報 月別集計</h1>
+    <p>保存済みHTMLファイル（例：ndl_sample.html）をアップロードしてください。</p>
+    <input type="file" id="htmlFile" />
+    <div id="output" class="mt-4"></div>
 
-def handle_file(event):
-    file = event.target.files[0]
-    reader = __new__(FileReader())
-    reader.onload = create_proxy(lambda e: process_html(reader.result))
-    reader.readAsText(file)
+    <py-script>
+        from js import document
+        from pyodide.ffi import create_proxy
+        from bs4 import BeautifulSoup
+        from datetime import datetime
+        from collections import Counter
+        import matplotlib.pyplot as plt
 
-def process_html(html):
-    soup = BeautifulSoup(html, "html.parser")
-    dates = []
-    for li in soup.select(".newsList li"):
-        try:
-            date_str = li.contents[0].strip()
-            date_obj = datetime.strptime(date_str, "%Y年%m月%d日")
-            dates.append(date_obj)
-        except:
-            continue
-</py-script>
+        def handle_file(event):
+            file = event.target.files[0]
+            reader = __new__(FileReader())
+            reader.onload = create_proxy(lambda e: process_html(reader.result))
+            reader.readAsText(file)
 
+        def process_html(html):
+            soup = BeautifulSoup(html, "html.parser")
+            dates = []
+            for li in soup.select(".newsList li"):
+                try:
+                    date_str = li.contents[0].strip()
+                    date_obj = datetime.strptime(date_str, "%Y年%m月%d日")
+                    dates.append(date_obj)
+                except:
+                    continue
+
+            monthly_counts = Counter()
+            for date in dates:
+                key = date.strftime("%Y年%m月")
+                monthly_counts[key] += 1
+
+            output = document.getElementById("output")
+            output.innerHTML = "<h2>📊 集計結果</h2><ul>" + "".join(
+                [f"<li>{k}: {v}件</li>" for k, v in sorted(monthly_counts.items())]
+            ) + "</ul>"
+
+            plt.figure(figsize=(8, 4))
+            plt.bar(monthly_counts.keys(), monthly_counts.values(), color="skyblue")
+            plt.xticks(rotation=45)
+            plt.title("国立国会図書館 新着情報 月別件数")
+            plt.xlabel("月")
+            plt.ylabel("件数")
+            plt.tight_layout()
+            plt.show()
+
+        element = document.getElementById("htmlFile")
+        element.addEventListener("change", create_proxy(handle_file))
+    </py-script>
 </body>
-
 </html>
