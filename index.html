@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="WebScrapingを掲載しているページです。">
+  <title>Creations | Web Scraping</title>
+  <!-- PyScript -->
+<link rel="stylesheet" href="https://pyscript.net/latest/pyscript.css" />
+<script defer src="https://pyscript.net/latest/pyscript.js"></script>
+</head>
+
+<body>
+ 
+<!-- PyScript -->
+ <h2 class="mb-4">📁 HTMLファイルをアップロード</h2>
+<input type="file" id="htmlFile" />
+<div id="output" class="mt-4"></div>
+<py-script>
+from js import document
+from pyodide.ffi import create_proxy
+
+def handle_file(event):
+    file = event.target.files[0]
+    reader = __new__(FileReader())
+    reader.onload = create_proxy(lambda e: process_html(reader.result))
+    reader.readAsText(file)
+
+def process_html(html):
+    soup = BeautifulSoup(html, "html.parser")
+    dates = []
+    for li in soup.select(".newsList li"):
+        try:
+            date_str = li.contents[0].strip()
+            date_obj = datetime.strptime(date_str, "%Y年%m月%d日")
+            dates.append(date_obj)
+        except:
+            continue
+</py-script>
+
+</body>
+
+</html>
