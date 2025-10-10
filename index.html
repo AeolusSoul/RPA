@@ -3,12 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <title>国立国会図書館 新着情報集計</title>
-    <link rel="stylesheet" href="https://pyscript.net/latest/pyscript.css" />
-    <script defer src="https://pyscript.net/latest/pyscript.js"></script>
-    <py-env>
-        - beautifulsoup4
-        - matplotlib
-    </py-env>
+    <link rel="stylesheet" href="https://pyscript.net/releases/2023.05.1/pyscript.css" />
+    <script defer src="https://pyscript.net/releases/2023.05.1/pyscript.js"></script>
     <style>
         body { font-family: sans-serif; padding: 2em; }
         #output ul { padding-left: 1em; }
@@ -22,51 +18,60 @@
     <div id="output" class="mt-4"></div>
 
     <py-script>
-        from js import document
-        from pyodide.ffi import create_proxy
-        from bs4 import BeautifulSoup
-        from datetime import datetime
-        from collections import Counter
-        import matplotlib.pyplot as plt
+        import asyncio
+        import micropip
 
-        def handle_file(event):
-            file = event.target.files[0]
-            reader = __new__(FileReader())
-            reader.onload = create_proxy(lambda e: process_html(reader.result))
-            reader.readAsText(file)
+        async def main():
+            await micropip.install("beautifulsoup4")
+            await micropip.install("matplotlib")
 
-        def process_html(html):
-            soup = BeautifulSoup(html, "html.parser")
-            dates = []
-            for li in soup.select(".newsList li"):
-                try:
-                    date_str = li.contents[0].strip()
-                    date_obj = datetime.strptime(date_str, "%Y年%m月%d日")
-                    dates.append(date_obj)
-                except:
-                    continue
+            from js import document
+            from pyodide.ffi import create_proxy
+            from bs4 import BeautifulSoup
+            from datetime import datetime
+            from collections import Counter
+            import matplotlib.pyplot as plt
 
-            monthly_counts = Counter()
-            for date in dates:
-                key = date.strftime("%Y年%m月")
-                monthly_counts[key] += 1
+            def handle_file(event):
+                file = event.target.files[0]
+                reader = __new__(FileReader())
+                reader.onload = create_proxy(lambda e: process_html(reader.result))
+                reader.readAsText(file)
 
-            output = document.getElementById("output")
-            output.innerHTML = "<h2>📊 集計結果</h2><ul>" + "".join(
-                [f"<li>{k}: {v}件</li>" for k, v in sorted(monthly_counts.items())]
-            ) + "</ul>"
+            def process_html(html):
+                soup = BeautifulSoup(html, "html.parser")
+                dates = []
+                for li in soup.select(".newsList li"):
+                    try:
+                        date_str = li.contents[0].strip()
+                        date_obj = datetime.strptime(date_str, "%Y年%m月%d日")
+                        dates.append(date_obj)
+                    except:
+                        continue
 
-            plt.figure(figsize=(8, 4))
-            plt.bar(monthly_counts.keys(), monthly_counts.values(), color="skyblue")
-            plt.xticks(rotation=45)
-            plt.title("国立国会図書館 新着情報 月別件数")
-            plt.xlabel("月")
-            plt.ylabel("件数")
-            plt.tight_layout()
-            plt.show()
+                monthly_counts = Counter()
+                for date in dates:
+                    key = date.strftime("%Y年%m月")
+                    monthly_counts[key] += 1
 
-        element = document.getElementById("htmlFile")
-        element.addEventListener("change", create_proxy(handle_file))
+                output = document.getElementById("output")
+                output.innerHTML = "<h2>📊 集計結果</h2><ul>" + "".join(
+                    [f"<li>{k}: {v}件</li>" for k, v in sorted(monthly_counts.items())]
+                ) + "</ul>"
+
+                plt.figure(figsize=(8, 4))
+                plt.bar(monthly_counts.keys(), monthly_counts.values(), color="skyblue")
+                plt.xticks(rotation=45)
+                plt.title("国立国会図書館 新着情報 月別件数")
+                plt.xlabel("月")
+                plt.ylabel("件数")
+                plt.tight_layout()
+                plt.show()
+
+            element = document.getElementById("htmlFile")
+            element.addEventListener("change", create_proxy(handle_file))
+
+        asyncio.ensure_future(main())
     </py-script>
 </body>
 </html>
